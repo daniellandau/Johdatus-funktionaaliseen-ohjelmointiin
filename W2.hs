@@ -6,18 +6,23 @@ import Data.Char
 -- Tehtävä 1: Määrittele vakio vuodet, jonka arvo on lista jossa on
 -- arvot 1982, 2004, 2012 tässä järjestyksessä.
 
-vuodet = undefined
+vuodet = [1982, 2004, 2012]
 
 -- Tehtävä 2: Toteuta funktio measure, joka palauttaa tyhjälle
 -- listalle -1 ja muuten listan pituuden
 
 measure :: [String] -> Int
-measure ss = undefined
+measure [] = -1
+measure ss = measure' ss 0
+
+measure' :: [String] -> Int -> Int
+measure' [] i = i
+measure' (x:xs) i = measure' xs (i+1)
 
 -- Tehtävä 3: Toteuta funktio takeFinal, joka palauttaa listan viimeiset n alkiota
 
 takeFinal :: Int -> [Int] -> [Int]
-takeFinal n xs = undefined
+takeFinal n xs = if (length xs <= n) then xs else takeFinal n (tail xs)
 
 -- Tehtävä 4: Toteuta funktio remove, joka poistaa annetun listan
 -- n:nnen alkion. Tarkemmin ottaen remove palauttaa uuden listan, joka
@@ -27,7 +32,10 @@ takeFinal n xs = undefined
 -- listat"
 
 remove :: Int -> [a] -> [a]
-remove i xs = undefined
+remove i xs = remove' i 0 [] xs
+
+remove' :: Int -> Int -> [a] -> [a] -> [a]
+remove' i j alku (x:xs) = if (i == j) then ((reverse alku) ++ xs) else remove' i (j+1) (x:alku) xs
 
 -- Tehtävä 5: Toteuta funktio substring i n s, joka palauttaa
 -- merkkijonon s indeksistä i alkavan n:n pituisen alimerkkijonon.
@@ -35,7 +43,15 @@ remove i xs = undefined
 -- Muista! merkkijonot ovat listoja
 
 substring :: Int -> Int -> String -> String
-substring i n s = undefined
+substring i n s = substring' i 0 n [] s
+
+substring' i j n sub (x:xs)  
+ | (j < i)    = substring' i (j+1) n sub xs
+ | (j < i+n)  = substring' i (j+1) n (x:sub) xs
+ | (j >= i+n) = reverse sub
+
+-- substring' i j n [] []  = "" 
+substring' i j n sub [] = reverse sub
 
 -- Tehtävä 6: Määrittele funktio mymax, joka ottaa argumenteikseen
 -- mittausfunktion tyyppiä a -> Int ja kaksi alkiota tyyppiä a.
@@ -47,7 +63,9 @@ substring i n s = undefined
 --  mymax head   [1,2,3] [4,5]  ==>  [4,5]  
 
 mymax :: (a -> Int) -> a -> a -> a
-mymax measure a b = undefined
+mymax measure a b
+ | (measure a) > (measure b) = a
+ | True = b
 
 -- Tehtävä 7: Määrittele funktio countSorted, joka laskee montako
 -- sille annetuista merkkijonoista on aakkosjärjestyksessä.
@@ -55,7 +73,7 @@ mymax measure a b = undefined
 -- Muista funktiot length, filter ja sort.
 
 countSorted :: [String] -> Int
-countSorted ss = undefined
+countSorted = length . filter (\s -> s == sort s)  
 
 -- Tehtävä 8: Määrittele funktio hassu, joka ottaa syötteenään listan
 -- merkkijonoja, ja palauttaa yhden merkkijonon, joka sisältää
@@ -68,7 +86,7 @@ countSorted ss = undefined
 --  - intercalate               modulista Data.List
 
 hassu :: [String] -> String
-hassu strings = undefined
+hassu strings = init $ map toUpper (map (\c -> if c == '\n' then ' ' else c) (unlines [s | s <- strings, length s > 5]))
 
 -- Tehtävä 9: Toteuta "quicksort", eli rekursiivinen
 -- lajittelualgoritmi joka toimii seuraavasti:
