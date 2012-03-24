@@ -125,7 +125,7 @@ prop_t12_fromTo = do
   start <- choose (0,20)
   len <- choose (0,10)
   let end = start+len-1
-  printTestCase ("fromTo "++show start++" "++show len) $
+  printTestCase ("fromTo "++show start++" "++show end) $
     fromTo start end === [start..end]
     
 prop_t13_sums = do
