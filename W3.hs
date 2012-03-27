@@ -19,39 +19,63 @@ import System.IO
 -- joista ensimmäinen on "HEI" ja toinen on "MAAILMA".
 
 hei :: IO ()
-hei = undefined
+hei = do
+  putStrLn "HEI"
+  putStrLn "MAAILMA"
 
 -- Tehtävä 2: Määrittele operaatio tervehdi siten, että tervehdi nimi
 -- tulostaa "HEI nimi"
 
 tervehdi :: String -> IO ()
-tervehdi s = undefined
+tervehdi s = do
+  putStrLn $ "HEI " ++ s
 
 -- Tehtävä 3: Määrittele operaatio tervehdi', joka lukee nimen
 -- näppäimistöltä ja sitten tervehtii kuten edellisessä tehtävässä.
 
 tervehdi' :: IO ()
-tervehdi' = undefined
+tervehdi' = do
+  nimi <- getLine
+  tervehdi nimi
 
 -- Tehtävä 4: Määrittele operaatio lueSanat n joka lukee käyttäjältä n
 -- sanaa (yksi per rivi) ja palauttaa ne aakkosjärjestyksessä
 
 lueSanat :: Int -> IO [String]
-lueSanat n = undefined
-
+lueSanat n = do
+  if (n > 0)
+    then lueSanat' n []
+    else return []
+  where
+    lueSanat' 0 ss = return $ sort ss
+    lueSanat' n ss = do
+      sana <- getLine
+      lueSanat' (n-1) (sana:ss)
+      
 -- Tehtävä 5: Määrittele operaatio lueKunnes f, joka lukee käyttäjältä
 -- merkkijonoja ja palauttaa ne listana. Lukeminen lopetetaan kun f
 -- palauttaa luetulle alkiolle True. (Sitä alkiota jolle f palauttaa
 -- True ei liitetä listaan).
 
 lueKunnes :: (String -> Bool) -> IO [String]
-lueKunnes f = undefined
+lueKunnes f = lueKunnes' f []
+  where
+    lueKunnes' f ss = do
+      sana <- getLine
+      if (f sana)
+        then return $ reverse ss
+        else lueKunnes' f (sana:ss)
 
 -- Tehtävä 6: Määrittele operaatio printFibs n, joka tulostaa n
 -- ensimmäistä fibonaccin lukua, yhden per rivi
 
+-- kanoninen impelementaatio, paitsi alku 1:1, eikä 0:1. Lähde:
+-- http://www.haskell.org/haskellwiki/The_Fibonacci_sequence#Canonical_zipWith_implementation
+fibs :: [Integer]
+fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
+
 printFibs :: Int -> IO ()
-printFibs n = undefined
+printFibs n = mapM_ putStrLn $ map show (take n fibs)
 
 -- Tehtävä 7: Määrittele operaatio isums n, joka lukee käyttäjältä n
 -- lukua ja palauttaa niitten summan. Lisäksi jokaisen luvun jälkeen
