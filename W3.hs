@@ -278,11 +278,11 @@ splitC :: Char -> String -> [String]
 splitC c [] = [[]]
 splitC c ss = splitC' c ss []
   where splitC' :: Char -> String -> [String] -> [String]
-        splitC' c [] cums = reverse $ map reverse cums
+        splitC' c [] cums = reverse $ map reverse cums -- lopuksi
+        splitC' c (s:ss) [] = splitC' c ss ([s]:[])    -- aluksi
         splitC' c (s:ss) (cum:cums)
-          | c == s    = splitC' c ss ([]: cum : cums) -- lisää
-          | otherwise = splitC' c ss ((s:cum) : cums)
-        splitC' c (s:ss) cums = splitC' c ss ([s]:cums)
+          | c == s    = splitC' c ss ([]: cum : cums)  -- lisää sana
+          | otherwise = splitC' c ss ((s:cum) : cums)  -- lisää kirjain sanaan
         
 -- Tehtävä 18: Toteuta operaatio compareFiles, joka saa kaksi
 -- tiedostonimeä, a ja b. Tiedostojen sisältöjen haluttaisiin olevan
@@ -325,8 +325,23 @@ splitC c ss = splitC' c ss []
 -- [String] -> [String]).
 
 compareFiles :: FilePath -> FilePath -> IO ()
-compareFiles a b = undefined
+compareFiles a b = do
+  ha <- openFile a ReadMode
+  hb <- openFile b ReadMode
+  contentsA <- hGetContents ha
+  contentsB <- hGetContents hb
+  let linesA = lines contentsA
+      linesB = lines contentsB
+  putStr $ unlines $ diff linesA linesB
 
+diff :: [String] -> [String] -> [String]
+diff linesA linesB = diff' linesA linesB []
+  where diff' :: [String] -> [String] -> [String] -> [String]
+        diff' [] [] diffs = reverse diffs
+        diff' (lineA:linesA) (lineB:linesB) diffs 
+          | lineA == lineB = diff' linesA linesB diffs
+          | otherwise = diff' linesA linesB (("> " ++ lineB) : ("< " ++ lineA) : diffs)
+          
 -- Tehtävä 19: Tässä tehtävässä näet miten funktionaalisessa
 -- ohjelmassa logiikan voi toteuttaa puhtaana funktiona, jota ympäröi
 -- yksinkertainen IO-"ajuri".
@@ -352,5 +367,12 @@ compareFiles a b = undefined
 --
 
 interact' :: ((String,a) -> (Bool,String,a)) -> a -> IO a
-interact' f state = undefined
-
+interact' f state = do
+  str <- getLine
+  let triplet = f (str,state)
+      (cont, msg, state') = triplet
+  putStr msg
+  if (cont)
+    then interact' f state'
+    else return state'
+    
