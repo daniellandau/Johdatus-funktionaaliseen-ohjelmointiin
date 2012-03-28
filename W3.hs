@@ -210,8 +210,9 @@ tuplaKutsu op = do op' <- op
 -- tyypintarkastuksesta läpi, se on lähes välttämättä oikein.
 
 yhdista :: (a -> IO b) -> (c -> IO a) -> c -> IO b
-yhdista op1 op2 c = do a <- op2 c
-                       op1 a
+yhdista op1 op2 c = op2 c >>= op1
+--yhdista op1 op2 c = do a <- op2 c
+--                       op1 a
                        
 -- Tehtävä 15: Tutustu modulin Data.IORef dokumentaatioon
 -- <http://www.haskell.org/ghc/docs/latest/html/libraries/base/Data-IORef.html>
@@ -267,8 +268,22 @@ hFetchLines h nums = do ls <- hGetContents h
 -- Huom! Eri riveillä voi olla eri määrä kenttiä
 
 readCSV :: FilePath -> IO [[String]]
-readCSV path = undefined
+readCSV path = do
+  h <- openFile path ReadMode
+  contents <- hGetContents h
+  let ls = lines contents
+  return $ map (splitC ',') ls
 
+splitC :: Char -> String -> [String]
+splitC c [] = [[]]
+splitC c ss = splitC' c ss []
+  where splitC' :: Char -> String -> [String] -> [String]
+        splitC' c [] cums = reverse $ map reverse cums
+        splitC' c (s:ss) (cum:cums)
+          | c == s    = splitC' c ss ([]: cum : cums) -- lisää
+          | otherwise = splitC' c ss ((s:cum) : cums)
+        splitC' c (s:ss) cums = splitC' c ss ([s]:cums)
+        
 -- Tehtävä 18: Toteuta operaatio compareFiles, joka saa kaksi
 -- tiedostonimeä, a ja b. Tiedostojen sisältöjen haluttaisiin olevan
 -- samat, mutta niissä on jotakin eroja. Siispä kun tiedostojen a ja b
