@@ -80,16 +80,28 @@ printFibs n = mapM_ putStrLn $ map show (take n fibs)
 -- Tehtävä 7: Määrittele operaatio isums n, joka lukee käyttäjältä n
 -- lukua ja palauttaa niitten summan. Lisäksi jokaisen luvun jälkeen
 -- tulostetaan siihenastinen summa luvuista.
-
+          
 isums :: Int -> IO Int
-isums n = undefined
+isums 0 = return 0
+isums n = isums' n 0
+
+isums' :: Int -> Int -> IO Int
+isums' 0 sum = return sum
+isums' n sum = do
+  line <- getLine
+  let num  = read line
+      sum' = sum + num
+  putStrLn $ show sum'
+  isums' (n-1) sum'
 
 -- Tehtävä 8: when on hyödyllinen funktio, mutta sen ensimmäien
 -- argumentti on tyyppiä Bool. Toteuta whenM joka toimii samoin mutta
 -- ehto on tyyppiä IO Bool.
 
 whenM :: IO Bool -> IO () -> IO ()
-whenM cond op = undefined
+whenM cond op = do
+  cond' <- cond
+  when cond' op
 
 -- Tehtävä 9: Toteuta funktio while ehto operaatio, joka suorittaa
 -- operaatiota niin kauan kun ehto palauttaa True.
@@ -106,7 +118,8 @@ whenM cond op = undefined
 -- Tämä tulostaa JEE niin kauan kuin käyttäjä vastaa K
 
 while :: IO Bool -> IO () -> IO ()
-while ehto op = undefined
+while ehto op = whenM ehto $ (do op
+                                 while ehto op)
 
 -- Tehtävä 10: Toteuta funktio debug, joka ottaa merkkijonon s ja
 -- IO-operaation op, ja palauttaa IO-operaation joka tulostaa annetun
@@ -114,19 +127,39 @@ while ehto op = undefined
 -- palauttaa op:n palautusarvo.
 
 debug :: String -> IO a -> IO a
-debug s op = undefined
+debug s op = do
+  putStrLn s
+  op
+  putStrLn s
+  op
 
 -- Tehtävä 11: Toteuta itse funktio mapM_. Saat käyttää (puhtaita)
 -- listafunktioita ja listojen hahmontunnistusta
 
 mymapM_ :: (a -> IO b) -> [a] -> IO ()
-mymapM_ = undefined
+mymapM_ f xs = do mySequence_ $ map f xs
+                  return ()
+                  
+mySequence_ :: [IO b] -> IO ()
+mySequence_ [] = return ()
+mySequence_ (x:xs) = do x
+                        mySequence_ xs
+                    
 
 -- Tehtävä 12: Toteuta itse funktio forM. Saat käyttää (puhtaita)
 -- listafunktioita ja listojen hahmontunnistusta
 
 myforM :: [a] -> (a -> IO b) -> IO [b]
-myforM as f = undefined
+myforM as f = do mySequence $ map f as
+
+mySequence :: [IO b] -> IO [b]
+mySequence [] = return []
+mySequence bs = mySequence' bs []
+  where mySequence' :: [IO b] -> [b] -> IO [b]
+        mySequence' [] bsCum = return $ reverse bsCum
+        mySequence' (b:bs) bsCum = do
+          b' <- b
+          mySequence' bs (b':bsCum)
 
 -- Tehtävä 13: Joskus törmää IO-operaatioihin jotka palauttavat
 -- IO-operaatiota. Esimerkiksi IO-operaatio joka palauttaa
@@ -155,7 +188,8 @@ myforM as f = undefined
 -- tyypintarkastuksesta läpi, se on lähes välttämättä oikein.
 
 tuplaKutsu :: IO (IO a) -> IO a
-tuplaKutsu op = undefined
+tuplaKutsu op = do op' <- op
+                   op'
 
 -- Tehtävä 14: Monesti IO-operaatioita halutaan ketjuttaa. Toteuta
 -- funktio yhdista joka toimii hieman kuten operaattori (.)
@@ -176,8 +210,9 @@ tuplaKutsu op = undefined
 -- tyypintarkastuksesta läpi, se on lähes välttämättä oikein.
 
 yhdista :: (a -> IO b) -> (c -> IO a) -> c -> IO b
-yhdista op1 op2 = undefined
-
+yhdista op1 op2 c = do a <- op2 c
+                       op1 a
+                       
 -- Tehtävä 15: Tutustu modulin Data.IORef dokumentaatioon
 -- <http://www.haskell.org/ghc/docs/latest/html/libraries/base/Data-IORef.html>
 --
@@ -190,7 +225,14 @@ yhdista op1 op2 = undefined
 -- Kyseessä on siis yksinkertainen tilallinen laskuri
 
 mkCounter :: IO (IO (), IO Int)
-mkCounter = undefined
+mkCounter = do
+  r <- newIORef 0
+  let inc = do
+        val <- readIORef r
+        writeIORef r (val+1)
+        return ()
+      get = readIORef r
+    in return (inc,get)
 
 -- Tehtävä 16: Toteuta operaatio hFetchLines, joka hakee annetusta
 -- tiedostoskahvasta rivit, joitten rivinumerot (rivinumerointi alkaa
@@ -200,7 +242,17 @@ mkCounter = undefined
 -- Modulin System.IO dokumentaatio auttanee.
 
 hFetchLines :: Handle -> [Int] -> IO [String]
-hFetchLines h nums = undefined
+hFetchLines h nums = do ls <- hGetContents h
+                        let lsWithNums = zip [1..] $ lines ls
+                        getLines' lsWithNums nums []
+  where getLines' :: [(Int,String)] -> [Int] -> [String] -> IO [String]
+        getLines' ls [] lsCum = return $ reverse lsCum
+        getLines' (l:ls) (n:nums) lsCum = 
+          let (lineNum,line) = l
+          in if (lineNum == n)
+             then getLines' ls nums (line:lsCum)
+             else getLines' ls (n:nums) lsCum
+
 
 -- Tehtävä 17: CSV on tiedostoformaatti, jossa taulukollinen arvoja on
 -- tallenettu tiedostoon niin, että tiedoston yksi rivi vastaa
