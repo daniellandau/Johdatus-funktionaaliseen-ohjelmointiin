@@ -129,9 +129,9 @@ while ehto op = whenM ehto $ (do op
 debug :: String -> IO a -> IO a
 debug s op = do
   putStrLn s
-  op
+  val <- op
   putStrLn s
-  op
+  return val
 
 -- Tehtävä 11: Toteuta itse funktio mapM_. Saat käyttää (puhtaita)
 -- listafunktioita ja listojen hahmontunnistusta
