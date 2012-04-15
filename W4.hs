@@ -345,12 +345,9 @@ treeLeaves :: Tree a -> Int
 treeLeaves t = foldTree leaft 1 t
 
 foldTree :: (a -> b -> b -> b) -> b -> Tree a -> b
-foldTree f x t = undefined
-
--- oman ajattelun helpottamiseksi
-foldList f start [] = start
-foldList f start [x] = f x start
-foldList f start (l:ls) = x l (foldList f start ls)
+foldTree f start Leaf = start
+foldTree f start (Node a left right) = 
+  f a (foldTree f start left) (foldTree f start right)  
 
 -- Tehtävä 19: Alla näet hieman laajennetun version luentojen
 -- värityypistä Color.
@@ -383,4 +380,10 @@ data Color = Red | Green | Blue | Mix Color Color | Darken Double Color
   deriving Show
 
 rgb :: Color -> [Double]
-rgb col = undefined
+rgb Red = [1.0, 0, 0]
+rgb Green = [0,1,0]
+rgb Blue = [0, 0, 1]
+rgb (Darken x c) = map (*(1-x)) (rgb c)
+rgb (Mix c1 c2) = let ziplist = zip (rgb c1) (rgb c2)
+                      f (a,b) = min (a+b) 1
+                  in map f ziplist
