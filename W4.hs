@@ -384,6 +384,5 @@ rgb Red = [1.0, 0, 0]
 rgb Green = [0,1,0]
 rgb Blue = [0, 0, 1]
 rgb (Darken x c) = map (*(1-x)) (rgb c)
-rgb (Mix c1 c2) = let ziplist = zip (rgb c1) (rgb c2)
-                      f (a,b) = min (a+b) 1
-                  in map f ziplist
+rgb (Mix c1 c2) = zipWith f (rgb c1) (rgb c2)
+    where f a b = min (a+b) 1
