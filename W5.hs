@@ -76,17 +76,23 @@ data Foo = Bar | Quux | Xyzzy
   deriving Show
 
 instance Eq Foo where
-  (==) = error "toteuta minut"
+  Bar == Bar = True 
+  Quux == Quux = True
+  Xyzzy == Xyzzy = True
+  _ == _ = False
   
 -- Tehtävä 6: Määrittele tyypille Foo sellainen Ord-instanssi että Quux < Bar < Xyzzy
 --
 -- Älä käytä derivingiä.
   
 instance Ord Foo where
-  compare = error "toteuta minut?"
-  (<=) = error "ja minut?"
-  min = error "ja minut?"
-  max = error "ja minut?"
+--  compare = error "toteuta minut?"
+  Quux `compare` Bar = LT
+  Bar `compare` Xyzzy = LT
+  Quux `compare` Xyzzy = LT
+  a `compare` b = if a == b then EQ else GT 
+--  min = error "ja minut?"
+--  max = error "ja minut?"
   
 -- Tehtävä 7: Tässä on 3d-vektorityyppi Vector. Määrittele sille Eq-instanssi.
 --
@@ -96,8 +102,11 @@ data Vector = Vector Integer Integer Integer
   deriving Show
            
 instance Eq Vector where
-  (==) = error "toteuta minut"
-
+  a == b = vectorToList a == vectorToList b
+  
+vectorToList :: Vector -> [Integer]
+vectorToList (Vector a b c) = [a,b,c]
+    
 -- Tehtävä 8: Määrittele tyypille Vector Num-instanssi siten, että
 -- kaikki operaatiot toimivat jokaiselle komponentille.
 --
@@ -110,7 +119,27 @@ instance Eq Vector where
 -- abs (Vector (-1) 2 (-3))    ==> Vector 1 2 3
 -- signum (Vector (-1) 2 (-3)) ==> Vector (-1) 1 (-1)
 
+listToVector :: [Integer] -> Vector
+listToVector [a,b,c] = Vector a b c
+
 instance Num Vector where
+  (+) = zipWithVec (+)
+  (*) = zipWithVec (*)
+  abs = mapVec abs
+  signum = mapVec signum
+  negate = mapVec negate
+  fromInteger a = Vector a a a -- Tämänkin olisi voinut kertoa, ettei olisi tarvinnut testistä kaivaa
+  
+  
+zipWithVec :: (Integer -> Integer -> Integer) -> Vector -> Vector -> Vector
+zipWithVec f a b = let [as,bs] = map vectorToList [a,b]
+                       cs = zipWith f as bs
+                   in listToVector cs
+
+mapVec :: (Integer -> Integer) -> Vector -> Vector
+mapVec f a = let as = vectorToList a
+                 bs = map f as
+             in listToVector bs
 
 -- Tehtävä 9: Määrittele funktio freqs, joka laskee kuinka monta
 -- kertaa kukin alkio esiintyy listassa.
@@ -120,7 +149,13 @@ instance Num Vector where
 --   ==> [(3,False)]
 
 freqs :: Eq a => [a] -> [(Int,a)]
-freqs xs = undefined
+freqs xs = foldr addInPlace [] xs
+
+addInPlace :: Eq a => a -> [(Int, a)]  -> [(Int, a)]
+addInPlace new [] = (1, new) : []
+addInPlace new (x@(count, val):xs) = if new == val 
+                                     then (count+1, val) : xs
+                                     else x : addInPlace  new xs
 
 -- Tehtävä 10: Määrittele allaolevalle kokonaislukuja sisältävän
 -- binääripuun tyypille Eq-instanssi.
@@ -131,7 +166,9 @@ data ITree = ILeaf | INode Int ITree ITree
   deriving Show
 
 instance Eq ITree where
-  (==) = error "toteuta minut"
+  ILeaf == ILeaf = True
+  (INode a al ar) == (INode b bl br) = (a,al,ar) == (b,bl,br)
+  _ == _ = False
 
 -- Tehtävä 11: Tässä on edelliseltä viikolta tuttu listatyyppimme
 -- List. Toteuta instanssi "Eq a => Eq (List a)" joka vertailee
@@ -143,7 +180,9 @@ data List a = Empty | LNode a (List a)
   deriving Show
 
 instance Eq a => Eq (List a) where
-  (==) = error "toteuta minut"
+  Empty == Empty = True
+  (LNode a as) == (LNode b bs) = (a,as) == (b,bs)
+  _ == _ = False
 
 -- Tehtävä 12: Määrittele funktio incrementAll, joka lisää kaikkia
 -- funktorin sisällä olevia arvoja yhdellä.
@@ -153,7 +192,7 @@ instance Eq a => Eq (List a) where
 --   incrementAll (Just 3.0)  ==>  Just 4.0
 
 incrementAll :: (Functor f, Num n) => f n -> f n
-incrementAll x = undefined
+incrementAll x = fmap (+1) x
 
 -- Tehtävä 13: Alla on määritelty tyyppi Result, joka toimii hieman
 -- kuten Maybe, mutta virhetiloja on kaksi erilaista: toinen sisältää
@@ -163,11 +202,17 @@ data Result a = MkResult a | NoResult | Failure String
   deriving (Show,Eq)
 
 instance Functor Result where
-
+  fmap _ NoResult = NoResult
+  fmap _ (Failure s) = Failure s
+  fmap f (MkResult a) = MkResult $ f a
+  
+  
 -- Tehtävä 14: Määrittele instanssi Functor List.
 
 instance Functor List where
-
+  fmap _ Empty = Empty
+  fmap f (LNode a as) = LNode (f a) (fmap f as)
+  
 -- Tehtävä 15: Tässä tyyppi Fun a, joka on yksinkertainen kääre
 -- funktiolle tyyppiä Int -> a. Tehtävänäsi on kirjoittaa instanssi
 -- Functor Fun.
@@ -181,6 +226,7 @@ runFun :: Fun a -> Int -> a
 runFun (Fun f) x = f x
 
 instance Functor Fun where
+  fmap g (Fun f) = Fun (g . f)
 
 -- Tehtävä 16: Määrittele operaattori ||| joka toimii kuten ||, mutta
 -- pakottaa _oikeanpuoleisen_ argumenttinsa.
@@ -191,7 +237,7 @@ instance Functor Fun where
 --   undefined ||| True  ==> True
 
 (|||) :: Bool -> Bool -> Bool
-x ||| y = undefined
+x ||| y = y || x
 
 -- Tehtävä 17: Määrittele funktio boolLength joka palauttaa
 -- Bool-listan pituuden ja pakottaa kaikki listan alkiot.
@@ -202,7 +248,7 @@ x ||| y = undefined
 -- Huom! length [False,undefined] ==> 2
 
 boolLength :: [Bool] -> Int
-boolLength xs = undefined
+boolLength xs = foldr (\x acc -> if x then 1 + acc else 1 + acc) 0 xs
 
 -- Tehtävä 18: Tämä ja seuraava tehtävä ovat pohjustusta ensi viikon
 -- materiaaliin.
@@ -233,7 +279,10 @@ boolLength xs = undefined
 --  (True,True,False)
 
 threeRandom :: (Random a, RandomGen g) => g -> (a,a,a)
-threeRandom g = undefined
+threeRandom g = let (a ,g')   = random g
+                    (b, g'')  = random g' 
+                    (c, g''') = random g''
+                in (a,b,c)
 
 -- Tehtävä 19: Toteuta funktio randomizeTree joka ottaa puun ja
 -- palauttaa samanmuotoisen puun jossa jokaisessa Nodessa on
@@ -256,4 +305,8 @@ data Tree a = Leaf | Node a (Tree a) (Tree a)
   deriving Show
 
 randomizeTree :: (Random a, RandomGen g) => Tree b -> g -> (Tree a,g)
-randomizeTree t g = undefined
+randomizeTree Leaf g = (Leaf, g)
+randomizeTree (Node _ left right) g = let (a, g') = random g
+                                          (left', g'') = randomizeTree left g'
+                                          (right', g''') = randomizeTree right g''
+                                      in (Node a left' right', g''')
