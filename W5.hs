@@ -248,7 +248,7 @@ x ||| y = y || x
 -- Huom! length [False,undefined] ==> 2
 
 boolLength :: [Bool] -> Int
-boolLength xs = foldr (\x acc -> if x then 1 + acc else 1 + acc) 0 xs
+boolLength xs = foldr (\x acc -> seq x (1 + acc)) 0 xs
 
 -- Tehtävä 18: Tämä ja seuraava tehtävä ovat pohjustusta ensi viikon
 -- materiaaliin.
