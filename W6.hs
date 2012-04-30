@@ -241,11 +241,11 @@ count x = modify (increment x)
 occurrences :: (Eq a) => [a] -> State [(a,Int)] [Int]
 occurrences [] = return [] 
 occurrences (xs) = mapM f xs
-  where f x = do
-          count x
-          arvot <- get
+  where f x = 
+          count x >>
+          get >>= \arvot ->
           let Just maara = lookup x arvot
-          return maara
+          in return maara
 
 -- Tehtävä 11: Toteuta funktio ifM, joka ottaa monadioperaation joka
 -- palauttaa Boolin, ja jos se on True ajaa operaation opThen, ja jos
