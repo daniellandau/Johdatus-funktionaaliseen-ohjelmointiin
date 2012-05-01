@@ -263,7 +263,7 @@ test = do
   return (x<10)
 
 ifM :: Monad m => m Bool -> m a -> m a -> m a
-ifM opBool opThen opElse = undefined
+ifM opBool opThen opElse = opBool >>= \b -> if b then opThen else opElse
 
 -- Tehtävä 12: Toteuta mapM2, joka on kuin mapM, mutta listoja on
 -- kaksi ja argumenttina oleva operaatio ottaa kaksi argumenttia.
@@ -278,7 +278,7 @@ ifM opBool opThen opElse = undefined
 --    ==> ([(),(),()],5)
 
 mapM2 :: Monad m => (a -> b -> m c) -> [a] -> [b] -> m [c]
-mapM2 op xs = undefined
+mapM2 op xs ys = sequence $ zipWith op xs ys
 
 -- Tehtävä 13&14: Hassumaassa on kaupunkeja, jotka on nimetty
 -- kokonaisluvuilla 0..n-1. Joittenkin kaupunkien välillä menee tie.
