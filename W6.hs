@@ -381,7 +381,7 @@ orderedPairs (x:xs) = (xs >>= (f x)) ++ (orderedPairs xs)
 
 summat :: [Int] -> [Int]
 summat [] = [0]
-sumamt [x] = [x,0]
+summat [x] = [x,0] -- tarpeeton?
 summat xs = undefined
 
 -- Tehtävä 17: Haskellin standardikirjasto määritteelee funktion
