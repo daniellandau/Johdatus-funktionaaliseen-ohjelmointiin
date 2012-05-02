@@ -329,7 +329,20 @@ routeExists :: [[Int]] -> Int -> Int -> Bool
 routeExists cities i j = j `elem` execState (dfs cities i) []
 
 dfs :: [[Int]] -> Int -> State [Int] ()
-dfs cities i = undefined
+dfs cities i =
+  addCity i >>
+  let fromI = cities !! i
+      go city = ifM (addCity city)
+                (dfs cities city) -- then jatka syvemmälle
+                (return ())       -- else pysähdy
+  in forM fromI go >> return ()
+
+addCity :: Int -> State [Int] Bool
+addCity i =   -- lisää yhden kaupungin, ja kertoo onko tarpeen jatkaa
+    get >>= \cities ->
+        if (i `notElem` cities)
+        then (put (i:cities) >> return True)
+        else return False
 
 -- Tehtävä 15: Tee funktio orderedPairs, joka palauttaa kaikki parit
 -- (i,j) siten, että i<j ja i on ennen j:tä listassa xs.
@@ -343,7 +356,9 @@ dfs cities i = undefined
 -- PS. testit eivät jälleen välitä listan järjestyksestä
 
 orderedPairs :: [Int] -> [(Int,Int)]
-orderedPairs xs = undefined
+orderedPairs [] = []
+orderedPairs (x:xs) = (xs >>= (f x)) ++ (orderedPairs xs)
+    where f x y = if x < y then return (x,y) else []
 
 -- Tehtävä 16: Tee funktio summat, joka laskee kaikki listan alkioita
 -- summaamalla saatavat luvut.
@@ -365,6 +380,8 @@ orderedPairs xs = undefined
 
 
 summat :: [Int] -> [Int]
+summat [] = [0]
+sumamt [x] = [x,0]
 summat xs = undefined
 
 -- Tehtävä 17: Haskellin standardikirjasto määritteelee funktion
