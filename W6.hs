@@ -335,7 +335,7 @@ dfs cities i =
       go city = ifM (addCity city)
                 (dfs cities city) -- then jatka syvemmälle
                 (return ())       -- else pysähdy
-  in forM fromI go >> return ()
+  in forM fromI go >> return ()   -- palautusarvoa ei saa olla
 
 addCity :: Int -> State [Int] Bool
 addCity i =   -- lisää yhden kaupungin, ja kertoo onko tarpeen jatkaa
@@ -381,8 +381,9 @@ orderedPairs (x:xs) = (xs >>= (f x)) ++ (orderedPairs xs)
 
 summat :: [Int] -> [Int]
 summat [] = [0]
-sumamt [x] = [x,0]
-summat xs = undefined
+summat (x:xs) = do
+  p <- [True, False]
+  if p then (map (+x) (summat xs)) else summat (xs)
 
 -- Tehtävä 17: Haskellin standardikirjasto määritteelee funktion
 --   foldM :: (Monad m) => (a -> b -> m a) -> a -> [b] -> m a
@@ -406,10 +407,10 @@ summat xs = undefined
 --    ==> Nothing
 
 sumBounded :: Int -> [Int] -> Maybe Int
-sumBounded k xs = foldM (f1 k) 0 xs
+sumBounded k xs = foldM (f1 k) 0 xs -- foldM lienee ennemmin sitten foldl?
 
 f1 :: Int -> Int -> Int -> Maybe Int
-f1 k acc x = undefined
+f1 k acc x = if acc + x > k then Nothing else Just (acc + x)
 
 -- Funktio sumNotTwice laskee listan summan, mutta jättää toistuvat
 -- luvut huomiotta.
@@ -424,8 +425,13 @@ sumNotTwice :: [Int] -> Int
 sumNotTwice xs = fst $ runState (foldM f2 0 xs) []
 
 f2 :: Int -> Int -> State [Int] Int
-f2 acc x = undefined
-
+f2 acc x = do
+  ls <- get
+  if x `notElem` ls 
+    then (modify (x:) >> return (x + acc))
+    else return acc
+     
+     
 -- Tehtävä 18: Tässä viime viikon tehtävistä tuttu tyyppi Result.
 -- Tehtävänäsi on toteuttaa Monad Result instanssi, joka toimii
 -- samantyyppisesti kuin Maybe-monadi.
