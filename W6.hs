@@ -452,7 +452,12 @@ f2 acc x = do
 data Result a = MkResult a | NoResult | Failure String deriving (Show,Eq)
 
 instance Monad Result where
-
+  (MkResult x) >>= f = f x
+  (Failure b)  >>= _ = Failure b
+  NoResult     >>= _ = NoResult
+  fail s = Failure s
+  return a = MkResult a
+  
 -- Tehtävä 19&20: Tässä SL-tyyppi, joka ikäänkuin yhdistää State- ja
 -- Logger-tyypit. Kirjoita instanssi Monad SL, joka kuljettaa tilaa
 -- kuten monadi State, ja yhdistää laskennan vaiheitten lokiviestit
@@ -489,4 +494,7 @@ modifySL :: (Int->Int) -> SL ()
 modifySL f = SL (\s -> ((),f s,[]))
 
 instance Monad SL where
-
+  return a = SL $ (\s -> (a, s, [])) 
+  SL a >>= f = SL $ (\s -> let (val, state, msg) = a s
+                               (
+                           in (val', state', msg ++ msg')
