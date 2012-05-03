@@ -496,5 +496,6 @@ modifySL f = SL (\s -> ((),f s,[]))
 instance Monad SL where
   return a = SL $ (\s -> (a, s, [])) 
   SL a >>= f = SL $ (\s -> let (val, state, msg) = a s
-                               (
-                           in (val', state', msg ++ msg')
+                               (SL new)          = f val
+                               (val', state', msg') = new state
+                           in (val', state', msg++ msg'))
