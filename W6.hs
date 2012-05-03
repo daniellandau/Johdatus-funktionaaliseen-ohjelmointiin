@@ -244,7 +244,7 @@ occurrences (xs) = mapM f xs
   where f x = 
           count x >>
           get >>= \arvot ->
-          let Just maara = lookup x arvot
+          let Just maara = lookup x arvot -- Maybe monadista saa arvoja ulos jopa
           in return maara
 
 -- Tehtävä 11: Toteuta funktio ifM, joka ottaa monadioperaation joka
@@ -330,12 +330,12 @@ routeExists cities i j = j `elem` execState (dfs cities i) []
 
 dfs :: [[Int]] -> Int -> State [Int] ()
 dfs cities i =
-  addCity i >>
+  addCity i >> -- aloituskaupunki
   let fromI = cities !! i
       go city = ifM (addCity city)
                 (dfs cities city) -- then jatka syvemmälle
                 (return ())       -- else pysähdy
-  in forM fromI go >> return ()   -- palautusarvoa ei saa olla
+  in mapM go fromI >> return ()   -- palautusarvoa ei saa olla
 
 addCity :: Int -> State [Int] Bool
 addCity i =   -- lisää yhden kaupungin, ja kertoo onko tarpeen jatkaa
@@ -495,7 +495,7 @@ modifySL f = SL (\s -> ((),f s,[]))
 
 instance Monad SL where
   return a = SL $ (\s -> (a, s, [])) 
-  SL a >>= f = SL $ (\s -> let (val, state, msg) = a s
-                               (SL new)          = f val
-                               (val', state', msg') = new state
-                           in (val', state', msg++ msg'))
+  a >>= f = SL $ \s -> let (val, state, msg) = runSL a s
+                           b = f val
+                           (val', state', msg') = runSL b state
+                       in (val', state', msg ++ msg')
