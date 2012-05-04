@@ -3,6 +3,7 @@ module W7 where
 import Data.List
 import Control.Monad.State
 import Data.Monoid
+import W6 (ifM)
 
 -- Tehtävä 1: Toteuta funktio pyramidi, joka tuotaa merkkijonon, joka
 -- on tähän tyyliin piirretty pyramidi:
@@ -267,7 +268,7 @@ test2 k x = do modify (k:)
 
 test :: Monad m => [a -> m Bool] -> a -> m Bool
 test [] _     = return True
-test (t:ts) x = t x >>= \b -> if b then test ts x else return False
+test (t:ts) x = ifM (t x) (test ts x) (return False)
 
 -- Tehtävä 10: Toteuta State-monadissa operaatio odds, joka tuottaa
 -- tilan, jossa ovat kaikki ne alkiot jotka esiintyvät alkuperäisessä
