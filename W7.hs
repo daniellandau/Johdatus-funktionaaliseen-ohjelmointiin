@@ -77,7 +77,7 @@ nousevat xs = reverse $ map reverse $ foldl f [] xs
     where f :: [[Int]] -> Int -> [[Int]]
           f acc@(x:ys) new
               | new > head x   = (new:x) : ys
-              | otherwise = [new] : acc
+              | otherwise      = [new] : acc
           f [] new = [[new]]
 
 
@@ -104,22 +104,26 @@ nousevat xs = reverse $ map reverse $ foldl f [] xs
 --  getPoints $ addPoints (-1000) $ newStudent "x" "0"
 --    ==> 0
 
-data Student = StudentUndefined
+data Student = Student {
+      nimi             :: String
+    , opiskelijanumero :: String
+    , pistemäärä       :: Int
+    }
 
 newStudent :: String -> String -> Student
-newStudent nam num = undefined
+newStudent nam num = Student { nimi = nam, opiskelijanumero = num, pistemäärä = 0 }
 
 getName :: Student -> String
-getName s = undefined
+getName s = nimi s
 
 getNumber :: Student -> String
-getNumber s = undefined
+getNumber s = opiskelijanumero s
 
 getPoints :: Student -> Int
-getPoints s = undefined
+getPoints s = pistemäärä s
 
 addPoints :: Int -> Student -> Student
-addPoints x s = undefined
+addPoints x s =  if x > 0 then s { pistemäärä = pistemäärä s + x } else s
 
 -- Tehtävä 6: Määrittele tyyppi Tree23, joka esittää puuta jossa
 -- jokaisella sisäsolmulla (eli ei-lehti-solmulla) on joko 2 tai 3
