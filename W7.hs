@@ -73,7 +73,13 @@ wrap xs = undefined
 --    ==> [[4,7,9],[3,6],[1,2],[2,5,8],[0]]
 
 nousevat :: [Int] -> [[Int]]
-nousevat xs = undefined
+nousevat xs = reverse $ map reverse $ foldl f [] xs
+    where f :: [[Int]] -> Int -> [[Int]]
+          f acc@(x:ys) new
+              | new > head x   = (new:x) : ys
+              | otherwise = [new] : acc
+          f [] new = [[new]]
+
 
 -- Tehtävä 5: Määrittele kurssilaista esittävä tietotyyppi
 -- Student, jolla on kolme kenttää: nimi (String),
