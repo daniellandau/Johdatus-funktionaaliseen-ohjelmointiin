@@ -2,6 +2,8 @@ module W7 where
 
 import Data.List
 import Control.Monad.State
+import Data.Monoid
+import W6 (ifM, occurrences)
 
 -- Tehtävä 1: Toteuta funktio pyramidi, joka tuotaa merkkijonon, joka
 -- on tähän tyyliin piirretty pyramidi:
@@ -21,9 +23,16 @@ import Control.Monad.State
 --
 -- PS. pyramidin ulkonäköä on helppo kokeilla ghci:ssä näin: putStr (pyramidi 5)
 
-pyramidi :: Int -> String
-pyramidi n = undefined
+infixl 9 *+
+(*+) :: String -> Int -> String
+s *+ 0 = ""
+s *+ i = s ++ (s *+ (i-1))
 
+pyramidi :: Int -> String
+pyramidi n = go n 1
+    where go n k 
+           | n == k    = "*" *+ (2*k-1) ++ "\n" 
+           | otherwise = " " *+ (n-k) ++ "*" *+ (2*k-1) ++ "\n" ++ go n (k+1)
 -- Tehtävä 2: Toteuta funktio jokaToinen, joka ottaa listan ja
 -- palauttaa kaikki listan ensimmäisen, kolmannen, viidennen, jne.
 -- alkion.
@@ -70,7 +79,13 @@ wrap xs = let get i = xs !! i
 --    ==> [[4,7,9],[3,6],[1,2],[2,5,8],[0]]
 
 nousevat :: [Int] -> [[Int]]
-nousevat xs = undefined
+nousevat xs = reverse $ map reverse $ foldl f [] xs
+    where f :: [[Int]] -> Int -> [[Int]]
+          f acc@(x:ys) new
+              | new > head x   = (new:x) : ys
+              | otherwise      = [new] : acc
+          f [] new = [[new]]
+
 
 -- Tehtävä 5: Määrittele kurssilaista esittävä tietotyyppi
 -- Student, jolla on kolme kenttää: nimi (String),
@@ -95,22 +110,26 @@ nousevat xs = undefined
 --  getPoints $ addPoints (-1000) $ newStudent "x" "0"
 --    ==> 0
 
-data Student = StudentUndefined
+data Student = Student {
+      nimi             :: String
+    , opiskelijanumero :: String
+    , pistemäärä       :: Int
+    }
 
 newStudent :: String -> String -> Student
-newStudent nam num = undefined
+newStudent nam num = Student { nimi = nam, opiskelijanumero = num, pistemäärä = 0 }
 
 getName :: Student -> String
-getName s = undefined
+getName s = nimi s
 
 getNumber :: Student -> String
-getNumber s = undefined
+getNumber s = opiskelijanumero s
 
 getPoints :: Student -> Int
-getPoints s = undefined
+getPoints s = pistemäärä s
 
 addPoints :: Int -> Student -> Student
-addPoints x s = undefined
+addPoints x s =  if x > 0 then s { pistemäärä = pistemäärä s + x } else s
 
 -- Tehtävä 6: Määrittele tyyppi Tree23, joka esittää puuta jossa
 -- jokaisella sisäsolmulla (eli ei-lehti-solmulla) on joko 2 tai 3
@@ -166,19 +185,24 @@ treeSize t = undefined
 -- compare (fromString "abc") (fromString "ab")  ==> GT
 -- compare (fromString "abc") (fromString "abd") ==> LT
 
-data MyString = MyStringUndefined
+data MyString = MyString { str :: String }
 
 fromString :: String -> MyString
-fromString s = undefined
+fromString s = MyString { str = s }
 toString :: MyString -> String
-toString ms = undefined
+toString ms = str ms
 
 instance Eq MyString where
-  (==) = error "toteuta minut"
+  a == b = str a == str b
   
 instance Ord MyString where
-  compare = error "toteuta minut"
-
+  compare a b = let sa = str a
+                    sb = str b
+                    la = length sa
+                    lb = length sb
+                in compare la lb `mappend` -- Ylös on lisätty import Data.Monoid tätä varten
+                   compare sa sb
+ 
 -- Tehtävä 8: Alla tyyppi Expr, joka kuvaa yhteen- ja jakolaskuista
 -- koostuvia laskutoimituksia. Esimerkiksi (1+2)/3+4 olisi
 --   Plus (Div (Plus (Constant 1) (Constant 2)) (Constant 3)) (Constant 4)
@@ -202,7 +226,13 @@ instance Ord MyString where
 data Expr = Constant Int | Plus Expr Expr | Div Expr Expr
 
 safeEval :: Expr -> Maybe Int
-safeEval e = undefined
+safeEval (Constant i) = Just i
+safeEval (Plus ma mb) = safeEval ma >>= \a ->
+                        safeEval mb >>= \b ->
+                        Just $ a + b 
+safeEval (Div  ma mb) = safeEval ma >>= \a -> 
+                        safeEval mb >>= \b ->
+                        if b /= 0 then Just (div a b) else Nothing
 
 -- Tehtävä 9: Toteuta operaatio test, joka saa listan monadisia
 -- testejä ja arvon. test palauttaa True jos kaikki testit palauttavat
@@ -241,7 +271,8 @@ test2 k x = do modify (k:)
                return (x>k)
 
 test :: Monad m => [a -> m Bool] -> a -> m Bool
-test ts x = undefined
+test [] _     = return True
+test (t:ts) x = ifM (t x) (test ts x) (return False) -- ifM edellisistä tehtävistä
 
 -- Tehtävä 10: Toteuta State-monadissa operaatio odds, joka tuottaa
 -- tilan, jossa ovat kaikki ne alkiot jotka esiintyvät alkuperäisessä
@@ -257,4 +288,6 @@ test ts x = undefined
 --    ==> ((),[3,2,1])
 
 odds :: Eq a => [a] -> State [a] ()
-odds xs = undefined
+odds xs = let (_,ls) = runState (occurrences xs) []
+              ls'    = map fst . filter (\(val,count) -> odd count) $ ls
+          in modify (++ls') -- Sen kuin vain lisätään W6:n occurrences-funkkarilla saatu lista
