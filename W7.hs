@@ -266,7 +266,8 @@ test2 k x = do modify (k:)
                return (x>k)
 
 test :: Monad m => [a -> m Bool] -> a -> m Bool
-test ts x = undefined
+test [] _     = return True
+test (t:ts) x = t x >>= \b -> if b then test ts x else return False
 
 -- Tehtävä 10: Toteuta State-monadissa operaatio odds, joka tuottaa
 -- tilan, jossa ovat kaikki ne alkiot jotka esiintyvät alkuperäisessä
