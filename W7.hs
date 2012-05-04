@@ -2,6 +2,7 @@ module W7 where
 
 import Data.List
 import Control.Monad.State
+import Data.Monoid
 
 -- Tehtävä 1: Toteuta funktio pyramidi, joka tuotaa merkkijonon, joka
 -- on tähän tyyliin piirretty pyramidi:
@@ -179,19 +180,24 @@ treeSize t = undefined
 -- compare (fromString "abc") (fromString "ab")  ==> GT
 -- compare (fromString "abc") (fromString "abd") ==> LT
 
-data MyString = MyStringUndefined
+data MyString = MyString { str :: String }
 
 fromString :: String -> MyString
-fromString s = undefined
+fromString s = MyString { str = s }
 toString :: MyString -> String
-toString ms = undefined
+toString ms = str ms
 
 instance Eq MyString where
-  (==) = error "toteuta minut"
+  a == b = str a == str b
   
 instance Ord MyString where
-  compare = error "toteuta minut"
-
+  compare a b = let sa = str a
+                    sb = str b
+                    la = length sa
+                    lb = length sb
+                in compare la lb `mappend` -- Ylös on lisätty import Data.Monoid tätä varten
+                   compare sa sb
+ 
 -- Tehtävä 8: Alla tyyppi Expr, joka kuvaa yhteen- ja jakolaskuista
 -- koostuvia laskutoimituksia. Esimerkiksi (1+2)/3+4 olisi
 --   Plus (Div (Plus (Constant 1) (Constant 2)) (Constant 3)) (Constant 4)
