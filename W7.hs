@@ -221,7 +221,13 @@ instance Ord MyString where
 data Expr = Constant Int | Plus Expr Expr | Div Expr Expr
 
 safeEval :: Expr -> Maybe Int
-safeEval e = undefined
+safeEval (Constant i) = Just i
+safeEval (Plus ma mb) = safeEval ma >>= \a ->
+                        safeEval mb >>= \b ->
+                        Just $ a + b 
+safeEval (Div  ma mb) = safeEval ma >>= \a -> 
+                        safeEval mb >>= \b ->
+                        if b /= 0 then Just (div a b) else Nothing
 
 -- Tehtävä 9: Toteuta operaatio test, joka saa listan monadisia
 -- testejä ja arvon. test palauttaa True jos kaikki testit palauttavat
