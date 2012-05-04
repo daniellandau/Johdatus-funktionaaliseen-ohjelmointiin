@@ -3,7 +3,7 @@ module W7 where
 import Data.List
 import Control.Monad.State
 import Data.Monoid
-import W6 (ifM)
+import W6 (ifM, occurrences)
 
 -- Tehtävä 1: Toteuta funktio pyramidi, joka tuotaa merkkijonon, joka
 -- on tähän tyyliin piirretty pyramidi:
@@ -268,7 +268,7 @@ test2 k x = do modify (k:)
 
 test :: Monad m => [a -> m Bool] -> a -> m Bool
 test [] _     = return True
-test (t:ts) x = ifM (t x) (test ts x) (return False)
+test (t:ts) x = ifM (t x) (test ts x) (return False) -- ifM edellisistä tehtävistä
 
 -- Tehtävä 10: Toteuta State-monadissa operaatio odds, joka tuottaa
 -- tilan, jossa ovat kaikki ne alkiot jotka esiintyvät alkuperäisessä
@@ -284,4 +284,6 @@ test (t:ts) x = ifM (t x) (test ts x) (return False)
 --    ==> ((),[3,2,1])
 
 odds :: Eq a => [a] -> State [a] ()
-odds xs = undefined
+odds xs = let (_,ls) = runState (occurrences xs) []
+              ls'    = map fst . filter (\(val,count) -> odd count) $ ls
+          in modify (++ls') -- Sen kuin vain lisätään W6:n occurrences-funkkarilla saatu lista
