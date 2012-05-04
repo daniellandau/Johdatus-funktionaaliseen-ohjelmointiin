@@ -147,21 +147,25 @@ addPoints x s =  if x > 0 then s { pistemäärä = pistemäärä s + x } else s
 -- PS! Muista jättää deriving Show -rivi paikalleen että testit voivat
 -- tulostaa asioita.
 
-data Tree23 = Undefined
+data Tree23 = Leaf | Node2 Tree23 Tree23 | Node3 Tree23 Tree23 Tree23
   deriving Show
 
 leaf :: Tree23
-leaf = undefined
+leaf = Leaf
 node2 :: Tree23 -> Tree23 -> Tree23
-node2 = undefined
+node2 a b = Node2 a b
 node3 :: Tree23 -> Tree23 -> Tree23 -> Tree23
-node3 = undefined
+node3 a b c = Node3 a b c
 
 treeHeight :: Tree23 -> Int
-treeHeight t = undefined
+treeHeight Leaf = 0
+treeHeight (Node2 a b)   = 1 + (maximum $ map treeHeight [a,b])
+treeHeight (Node3 a b c) = 1 + (maximum $ map treeHeight [a,b,c])
 
 treeSize :: Tree23 -> Int
-treeSize t = undefined
+treeSize Leaf = 0
+treeSize (Node2 a b)   = 1 + (treeSize a) + (treeSize b)
+treeSize (Node3 a b c) = 1 + (treeSize a) + (treeSize b) + (treeSize c)
 
 -- Tehtävä 7: Määrittele tyyppi MyString, ja sille Eq ja Ord
 -- -instanssit.
